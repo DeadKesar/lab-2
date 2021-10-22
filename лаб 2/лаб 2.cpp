@@ -6,20 +6,38 @@
 using namespace std;
 
 string GetText();
-string FindLongestWord(string text);
+string FindLongestWord(string text, bool isMeaningful);
 
 int main()
 {            
-    string testText = "aa sds ss sssss a a a a a a a a a 6789876";
+    setlocale(LC_ALL, "Russian");
+    string testText = "ss sssss 6789876";
+    bool isMeaningful = false;
+    while (true)
+    {
+        cout << "учитывать ли разделители в тексте?" << endl << "y/n" << endl;
+        char answer = getchar();
+        switch (answer)
+        {
+        case('y'):
+            isMeaningful = true;
+            break;
+        case('n'):
+            isMeaningful = false;
+            break;
+        default:
+            cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            continue;
+        }
+        break;
+    }
     
-   // getline(cin, testText);
-    
-    string answer = FindLongestWord(testText);
+    string answer = FindLongestWord(testText, isMeaningful);
     cout << answer << endl;
     return 0;
 }
 
-string FindLongestWord(string text)
+string FindLongestWord(string text, bool isMeaningful)
 {
     string longestWord;
     if (text.length() > 0)
@@ -35,7 +53,8 @@ string FindLongestWord(string text)
     {
         for (int j = 1; j < text.length() - i; j++)
         {
-            if (text[i + j - 1] == ' ' || text[i + j - 1] == '.' || text[i + j - 1] == '!', text[i + j - 1] == '?')
+            if (isMeaningful && (text[i + j - 1] == ' ' || text[i + j - 1] == '.' || text[i + j - 1] == '!'|| text[i + j - 1] == '?'||
+                text[i + j - 1] == ';'|| text[i + j - 1] == ':'|| text[i + j - 1] == '"'))
                 //  поиск среди осмысленных слов. Мы пологаем что слова отделены друг от друга разделителями.
             {
                 i += j - 1;
