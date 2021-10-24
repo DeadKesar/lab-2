@@ -1,25 +1,28 @@
 ﻿
-#include <iostream>   //ввод-вывод
-#include <string>     //работа со строками
+#include <iostream>   //ввод-вывод   
+#include <string.h>  //работа со строками
 
 using namespace std;
 
 // выбор функции поиска слова.
 char GetYesNo();
 // получаем пользовательский текст
-string * GetText(int size);
+char ** GetText(int size);
 //обрабатываем вектор построчно используя функцию с учётом разделителей
-string ArrayProcessing(string* text, int stringsCount);
+char* ArrayProcessing(char** text, int stringsCount);
 //обрабатываем вектор построчно используя функцию без учёта разделителей
-string ArrayProcessingNoMeaningful(string* text, int stringsCount);
+char* ArrayProcessingNoMeaningful(char** text, int stringsCount);
 //предпологаем что слово это некая единица отделёная разделителями.
-string FindLongestWord(string text);
+char* FindLongestWord(char* text);
 // функция расматривает любую последовательность символов как слово.
-string FindLongestWordNoMeaningful(string text);
+char* FindLongestWordNoMeaningful(char* text);
 // получить числовое значение от пользователя с проверкой ввод, используется для получения количества строк
-string GetSubstring(string text, int start, int size);
+char* GetSubstring(char* text, int start, int size);
 //разворот строки
-string reverseStr(string text);
+char* reverseStr(char* text);
+//получить копию строки
+char* GetCopy(char* origin, int size);
+// получить числовое значение с проверкой ввода
 double GetNumber();
 
 
@@ -27,25 +30,33 @@ int main()
 {     
     //отображение русских символов в консоли
     setlocale(LC_ALL, "Russian");
-    string answer;
+    char* answer = new char[] {"\0"};
     cout << "введите количество строк:  ";
     // ограничение для выхода из цикла получения текста.
     int countStrings = GetNumber();
     //запрашиваем текст у пользовотеля.
-    string* text = GetText(countStrings);
+    char** text = GetText(countStrings);
     //ветвим программу на 2 случая
     switch (GetYesNo())    {
     case('y'):
         //случай с учётом разделителей
+        delete[] answer;
         answer = ArrayProcessing(text, countStrings);
         break;
     case('n'):
         //без учёта разделителей
+        delete[] answer;
         answer = ArrayProcessingNoMeaningful(text, countStrings);
         break;
     } 
-    cout << answer<< "   " << answer.length() << endl;
-    delete [] text; //чистим память
+    cout << answer<< "   " << strlen(answer) << endl;
+    //чистим память
+    for (int i = 0; i < countStrings; i++)
+    {
+        delete[] text[i];
+    }
+    delete[] answer;
+    delete [] text; 
     return 0;
 }
 char GetYesNo()
@@ -66,80 +77,92 @@ char GetYesNo()
 }
 
 // просто построчно вызываем соответствующую функцию поиска самого длинного палиндрома в строке.
-string ArrayProcessing(string* text, int stringsCount)
+char* ArrayProcessing(char** text, int stringsCount)
 {
-    string answer = "";
+    char* answer = new char[]{ "\0" };
     for (int i = 0; i < stringsCount; i++)
     {
-        string localMax = FindLongestWord(text[i]);
-        if (localMax.length() > answer.length())
+        char* localMax = FindLongestWord(text[i]);
+        if (strlen(localMax) > strlen(answer))
         {
-            answer = localMax;
+            delete[] answer;
+            answer = GetCopy(localMax, strlen(localMax));
         }
+        delete[] localMax;
     }
     return answer;
 
 }
 
 // построчно вызываем функцию поиска палиндрома без учёта разделителей.
-string ArrayProcessingNoMeaningful(string * text, int stringsCount)
+char* ArrayProcessingNoMeaningful(char** text, int stringsCount)
 {
-    string answer = "";
+    char* answer = new char[] { "\0" };
     for (int i = 0; i < stringsCount; i++)
     {
-        string localMax = FindLongestWordNoMeaningful(text[i]);
-        if (localMax.length() > answer.length())
+        char* localMax = FindLongestWordNoMeaningful(text[i]);
+        if (strlen(localMax) > strlen(answer))
         {
-            answer = localMax;
+            delete[] answer;
+            answer = GetCopy(localMax, strlen(localMax));
         }
+        delete[] localMax;
     }
     return answer;
 }
 
 //ищем в строке самый длинный палиндром пологая что слова разделены чем-либо.
-string FindLongestWord(string text)
+char* FindLongestWord(char* text)
 {
-    string longestWord = "";
+    char* longestWord = new char[] { "\0" };
     bool isWord = false;
     //проверка на пустую строку
-    if (text.length() < 1)
+    if (strlen(text) < 1)
     {
-        return "";
+        return longestWord;
     }
     int maxLength = 0;
-    for (int i = 0; i < text.length(); i++)
+    for (int i = 0; i < strlen(text); i++)
     {
-        for (int j = 1; j <= text.length() - i; j++)
+        for (int j = 1; j <= strlen(text) - i; j++)
         {
             if ((isWord) && (text[i + j - 1] == ' ' || text[i + j - 1] == '.' || text[i + j - 1] == '!'|| text[i + j - 1] == '?'||
                 text[i + j - 1] == ';'|| text[i + j - 1] == ':'|| text[i + j - 1] == '"'))
                 //  случай когда после слова встретился разделитель
             {
-                string sub = GetSubstring(text, i, j-1);
-                if (sub == reverseStr(sub) && sub.length() > maxLength)
+                char* sub = GetSubstring(text, i, j - 1);
+                char* reSub = reverseStr(sub);
+                if (strcmp(sub, reSub) == 0 && strlen(sub) > maxLength)
                 {
-                    longestWord = sub;
-                    maxLength = sub.length();
+                    delete[] longestWord;
+                    longestWord = GetCopy(sub, strlen(sub));
+                    maxLength = strlen(sub);
                 }
                 i += j-1;
                 j = 0;
                 isWord = false;
+                delete[] reSub;
+                delete[] sub;
                 break;
                 // берем подстроку длиной с последнее слово разварачиваем и сравниваем саму с собой,
                 //если они совпали, следовательно имеем палиндром. Сравниваем с найденым ранее. 
                 //сдвигаем итератор на длину слова и продолжаем поиск.
             }
-            else if(i + j == text.length() && !(text[i + j - 1] == ' ' || text[i + j - 1] == '.' || text[i + j - 1] == '!' || text[i + j - 1] == '?' ||
+            else if(i + j == strlen(text) && !(text[i + j - 1] == ' ' || text[i + j - 1] == '.' || text[i + j - 1] == '!' || text[i + j - 1] == '?' ||
                 text[i + j - 1] == ';' || text[i + j - 1] == ':' || text[i + j - 1] == '"'))
                 //проверяем случай конца строки
             {
-                string sub = GetSubstring(text, i, j);
-                if (sub == reverseStr(sub) && sub.length() > maxLength)
+                char* sub = GetSubstring(text, i, j);
+                char* reSub = reverseStr(sub);
+                if (strcmp(sub, reSub) == 0 && strlen(sub) > maxLength)
                 {
-                    longestWord = sub;
-                    maxLength = sub.length();
+                    delete[] longestWord;
+                    longestWord = GetCopy(sub, strlen(sub));
+                    maxLength = strlen(sub);
                 }
                 i += j;
+                delete[] reSub;
+                delete[] sub;
                 break;
             }
             else   if (text[i + j - 1] == ' ' || text[i + j - 1] == '.' || text[i + j - 1] == '!' || text[i + j - 1] == '?' ||
@@ -158,47 +181,67 @@ string FindLongestWord(string text)
     }
     return longestWord;
 }
-string FindLongestWordNoMeaningful(string text)
+char* FindLongestWordNoMeaningful(char* text)
 {
-    string longestWord;
-    if (text.length() > 0)
+    char* longestWord = new char[] { "\0" };
+    if (strlen(text) > 0)
         //так как мы предполагаем что любой символ может быть частью "слова" берём первый символ в качестве
         //потенциального ответа
     {
+        delete[] longestWord;
         longestWord = GetSubstring(text, 0, 1);
     }
     else
     {
-        return "";
+        return longestWord;
     }
     int maxLength = 1;
-    for (int i = 0; i < text.length() - 1; i++)
+    for (int i = 0; i < strlen(text) - maxLength; i++)
     {
         //двигаемся вдоль текста увеличевая сравниваемое слово пока не дойдём до конца строки
         //после чего увеличиваем итератор первого цикла на один и начинаем со следующего символа
         //перебирать все возможные слова
-        for (int j = 1; j <= text.length() - i; j++)
+        for (int j = 1; j <= strlen(text) - i; j++)
         {
-            string sub = GetSubstring(text, i, j);
-            if (sub == reverseStr(sub) && sub.length() > maxLength)
+            char* sub = GetSubstring(text, i, j);
+            char* reSub = reverseStr(sub);
+            if (strcmp(sub, reSub) == 0 && strlen(sub) > maxLength)
             {
-                longestWord = sub;
-                maxLength = sub.length();
+                delete[] longestWord;
+                longestWord = GetCopy(sub, strlen(sub));
+                maxLength = strlen(sub);
             }
+            delete[] reSub;
+            delete[] sub;
         }
     }
     return longestWord;
 }
 
- string * GetText(int countStrings)
+char** GetText(int countStrings)
 {
-    string *text = new string [countStrings] ;
     cout << "введите текст (внимание! русский язык не поддерживается!) :  " << endl;
-    for (int i = 0; i < countStrings; i++)
-    std::getline(std::cin, text[i]);
+    char ** text = new char* [countStrings];
+    for (int j = 0; j < countStrings; j++)
+    {
+        char ch;
+        cin.get(ch);//блокируем поток, пока вводим символы
+        cin.putback(ch);//возвращаем считаные символы во входной поток
+        int size = cin.ios::rdbuf()->in_avail();//определяем размер входного буфера
+        if (size > 0)
+        {
+            char* str = new char[size];
+
+            for (int i = 0; i < size; i++)
+            {
+                cin.get(str[i]);
+            }
+            str[size - 1] = '\0';
+            text[j] = str;
+        }
+    }
     return text;
 }
-
 double GetNumber()
 {
     double num;
@@ -219,7 +262,7 @@ double GetNumber()
     }
 }
 //получение подстроки по стартовому индексу и длине
-string GetSubstring(string text, int start, int size)
+char* GetSubstring(char* text, int start, int size)
 {
     char* str = new char[size+1];
     for (int i = 0; i <  size; i++)
@@ -227,21 +270,31 @@ string GetSubstring(string text, int start, int size)
         str[i] = text[i + start];
     }
     str[size] = '\0';
-    string answer = (const char*) str;
-    delete[] str;
-    return answer;
+    return str;
 }
 //разворот строки
-string reverseStr(string text)
+char* reverseStr(char* text)
 {
-    char* str = new char[text.length()+1];
-    for (int i = text.length() - 1,j = 0; i >= 0; i--, j++)
+    char* str = new char[strlen(text)+1];
+    for (int i = strlen(text) - 1,j = 0; i >= 0; i--, j++)
     {
         str[j] = text[i];
     }
-    str[text.length()] = '\0';
-    string answer = (const char*)str;
-    delete[] str;
-    return answer;
+    str[strlen(text)] = '\0';
+    return str;
 }
-
+//получение копии строки через указатели
+char* GetCopy(char* origin, int size)
+{
+    char* copy = new char[size + 1];
+    for (int i = 0; i < size; i++)
+    {
+        *copy = *origin;
+        copy++;
+        origin++;
+    }
+    copy -= size;
+    origin -= size;
+    copy[size] = '\0';
+    return copy;
+}
