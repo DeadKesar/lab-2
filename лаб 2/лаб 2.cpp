@@ -1,46 +1,51 @@
 ﻿
 #include <iostream>   //ввод-вывод
 #include <string>     //работа со строками
-#include <vector>     //работа с векторами
-
 
 using namespace std;
 
-char GetYesNo();
 // выбор функции поиска слова.
-std::vector<string> GetText();
+char GetYesNo();
 // получаем пользовательский текст
-string VectorProcessing(std::vector<string> text);
+string * GetText(int size);
 //обрабатываем вектор построчно используя функцию с учётом разделителей
-string VectorProcessingNoMeaningful(std::vector<string> text);
+string ArrayProcessing(string* text, int stringsCount);
 //обрабатываем вектор построчно используя функцию без учёта разделителей
-string FindLongestWord(string text);
+string ArrayProcessingNoMeaningful(string* text, int stringsCount);
 //предпологаем что слово это некая единица отделёная разделителями.
-string FindLongestWordNoMeaningful(string text);
+string FindLongestWord(string text);
 // функция расматривает любую последовательность символов как слово.
-double GetNumber();
+string FindLongestWordNoMeaningful(string text);
 // получить числовое значение от пользователя с проверкой ввод, используется для получения количества строк
+string GetSubstring(string text, int start, int size);
+//разворот строки
+string reverseStr(string text);
+double GetNumber();
+
 
 int main()
-{            
-    setlocale(LC_ALL, "Russian");
+{     
     //отображение русских символов в консоли
+    setlocale(LC_ALL, "Russian");
     string answer;
-    std::vector<string> text = GetText();  
+    cout << "введите количество строк:  ";
+    // ограничение для выхода из цикла получения текста.
+    int countStrings = GetNumber();
     //запрашиваем текст у пользовотеля.
-    switch (GetYesNo())
+    string* text = GetText(countStrings);
     //ветвим программу на 2 случая
-    {
+    switch (GetYesNo())    {
     case('y'):
         //случай с учётом разделителей
-        answer = VectorProcessing(text);
+        answer = ArrayProcessing(text, countStrings);
         break;
     case('n'):
         //без учёта разделителей
-        answer = VectorProcessingNoMeaningful(text);
+        answer = ArrayProcessingNoMeaningful(text, countStrings);
         break;
     } 
     cout << answer<< "   " << answer.length() << endl;
+    delete [] text; //чистим память
     return 0;
 }
 char GetYesNo()
@@ -60,11 +65,11 @@ char GetYesNo()
     }
 }
 
-string VectorProcessing(std::vector<string> text)
 // просто построчно вызываем соответствующую функцию поиска самого длинного палиндрома в строке.
+string ArrayProcessing(string* text, int stringsCount)
 {
     string answer = "";
-    for (int i = 0; i < text.size(); i++)
+    for (int i = 0; i < stringsCount; i++)
     {
         string localMax = FindLongestWord(text[i]);
         if (localMax.length() > answer.length())
@@ -75,11 +80,12 @@ string VectorProcessing(std::vector<string> text)
     return answer;
 
 }
-string VectorProcessingNoMeaningful(std::vector<string> text)
+
 // построчно вызываем функцию поиска палиндрома без учёта разделителей.
+string ArrayProcessingNoMeaningful(string * text, int stringsCount)
 {
     string answer = "";
-    for (int i = 0; i < text.size(); i++)
+    for (int i = 0; i < stringsCount; i++)
     {
         string localMax = FindLongestWordNoMeaningful(text[i]);
         if (localMax.length() > answer.length())
@@ -90,13 +96,13 @@ string VectorProcessingNoMeaningful(std::vector<string> text)
     return answer;
 }
 
-string FindLongestWord(string text)
 //ищем в строке самый длинный палиндром пологая что слова разделены чем-либо.
+string FindLongestWord(string text)
 {
     string longestWord = "";
     bool isWord = false;
+    //проверка на пустую строку
     if (text.length() < 1)
-        //проверка на пустую строку
     {
         return "";
     }
@@ -109,10 +115,8 @@ string FindLongestWord(string text)
                 text[i + j - 1] == ';'|| text[i + j - 1] == ':'|| text[i + j - 1] == '"'))
                 //  случай когда после слова встретился разделитель
             {
-                string sub = text.substr(i, j-1);
-                string reSub = sub;
-                reverse(reSub.begin(), reSub.end());
-                if (sub == reSub && sub.length() > maxLength)
+                string sub = GetSubstring(text, i, j-1);
+                if (sub == reverseStr(sub) && sub.length() > maxLength)
                 {
                     longestWord = sub;
                     maxLength = sub.length();
@@ -129,10 +133,8 @@ string FindLongestWord(string text)
                 text[i + j - 1] == ';' || text[i + j - 1] == ':' || text[i + j - 1] == '"'))
                 //проверяем случай конца строки
             {
-                string sub = text.substr(i, j);
-                string reSub = sub;
-                reverse(reSub.begin(), reSub.end());
-                if (sub == reSub && sub.length() > maxLength)
+                string sub = GetSubstring(text, i, j);
+                if (sub == reverseStr(sub) && sub.length() > maxLength)
                 {
                     longestWord = sub;
                     maxLength = sub.length();
@@ -163,7 +165,7 @@ string FindLongestWordNoMeaningful(string text)
         //так как мы предполагаем что любой символ может быть частью "слова" берём первый символ в качестве
         //потенциального ответа
     {
-        longestWord = text.substr(0, 1);
+        longestWord = GetSubstring(text, 0, 1);
     }
     else
     {
@@ -177,10 +179,8 @@ string FindLongestWordNoMeaningful(string text)
         //перебирать все возможные слова
         for (int j = 1; j <= text.length() - i; j++)
         {
-            string sub = text.substr(i, j);
-            string reSub = sub;
-            reverse(reSub.begin(), reSub.end());
-            if (sub == reSub && sub.length() > maxLength)
+            string sub = GetSubstring(text, i, j);
+            if (sub == reverseStr(sub) && sub.length() > maxLength)
             {
                 longestWord = sub;
                 maxLength = sub.length();
@@ -190,16 +190,13 @@ string FindLongestWordNoMeaningful(string text)
     return longestWord;
 }
 
-std::vector<string> GetText()
+ string * GetText(int countStrings)
 {
-    cout << "введите количество строк:  ";
-    int countStrings = GetNumber();
-    // ограничение для выхода из цикла получения текста.
-    std::vector<string>  textVector(countStrings);
+    string *text = new string [countStrings] ;
     cout << "введите текст (внимание! русский язык не поддерживается!) :  " << endl;
     for (int i = 0; i < countStrings; i++)
-    std::getline(std::cin, textVector[i]);
-    return textVector;
+    std::getline(std::cin, text[i]);
+    return text;
 }
 
 double GetNumber()
@@ -220,5 +217,31 @@ double GetNumber()
             return num; // выходим из функции.
         }
     }
+}
+//получение подстроки по стартовому индексу и длине
+string GetSubstring(string text, int start, int size)
+{
+    char* str = new char[size+1];
+    for (int i = 0; i <  size; i++)
+    {
+        str[i] = text[i + start];
+    }
+    str[size] = '\0';
+    string answer = (const char*) str;
+    delete[] str;
+    return answer;
+}
+//разворот строки
+string reverseStr(string text)
+{
+    char* str = new char[text.length()+1];
+    for (int i = text.length() - 1,j = 0; i >= 0; i--, j++)
+    {
+        str[j] = text[i];
+    }
+    str[text.length()] = '\0';
+    string answer = (const char*)str;
+    delete[] str;
+    return answer;
 }
 
