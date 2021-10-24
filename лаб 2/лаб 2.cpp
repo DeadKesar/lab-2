@@ -217,31 +217,22 @@ char* FindLongestWordNoMeaningful(char* text)
     }
     return longestWord;
 }
-
+// получаем текст от пользователя
 char** GetText(int countStrings)
 {
     cout << "введите текст (внимание! русский язык не поддерживается!) :  " << endl;
-    char ** text = new char* [countStrings];
+    char** text = new char* [countStrings];
     for (int j = 0; j < countStrings; j++)
     {
-        char ch;
-        cin.get(ch);//блокируем поток, пока вводим символы
-        cin.putback(ch);//возвращаем считаные символы во входной поток
-        int size = cin.ios::rdbuf()->in_avail();//определяем размер входного буфера
-        if (size > 0)
-        {
-            char* str = new char[size];
-
-            for (int i = 0; i < size; i++)
-            {
-                cin.get(str[i]);
-            }
-            str[size - 1] = '\0';
-            text[j] = str;
-        }
+        char* str = new char[500]; // выделим места с запасом под строку.
+        cin.getline(str, 500, '\n'); // чтение строки
+        char* finalStr = GetCopy(str, strlen(str));
+        text[j] = finalStr;
+        delete[] str;
     }
     return text;
 }
+// получить числовое значение с проверкой ввода
 double GetNumber()
 {
     double num;
